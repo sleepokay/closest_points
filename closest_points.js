@@ -1,6 +1,5 @@
 var points;
 var closest;
-var midLines;
 
 function setup() {
   createCanvas(window.innerWidth, window.innerHeight);
@@ -8,8 +7,8 @@ function setup() {
   frameRate(30);
   textFont("Helvetica");
   textSize(12);
-  
-  midLines = new Array();
+
+  step = 0;
   
   var n = 15;
   points = new Array(n);
@@ -25,13 +24,8 @@ function setup() {
 
 function draw() {
   clear();
-  
-  for (var i = 0; i < midLines.length; i++) {
-    stroke(30, 150, 60);  
-    line(midLines[i][0], 0, midLines[i][0], height);
-  }
-  
-  
+
+  //draw points
   for (var i = 0; i < points.length; i++) {
     noStroke();
     fill(20, 80, 200);
@@ -41,24 +35,17 @@ function draw() {
     fill(0);
     text(round(points[i].x) + ", " + round(points[i].y), points[i].x + 5, points[i].y, 1000, 12);  
   }
-  
+
+  // highlight closest points
   stroke(220, 80, 20);
   line(closest[0].x, closest[0].y, closest[1].x, closest[1].y);
   fill(220, 80, 20);
   ellipse(closest[0].x, closest[0].y, 5, 5);
   ellipse(closest[1].x, closest[1].y, 5, 5);
-  
-  
-  
 }
 
 function distance(p1, p2) {
   return sqrt(pow(p1.x-p2.x, 2) + pow(p1.y-p2.y, 2));
-}
-  
-function logPoints(P) {
-  for (var i = 0; i < P.length; i++)
-    console.log(round(P[i].x) + ", " + round(P[i].y));
 }
 
 function sortbyX(P) {  
@@ -77,28 +64,29 @@ function sortbyY(P) {
   return temp;
 }
 
+function logPoints(P) {
+  for (var i = 0; i < P.length; i++)
+    console.log(round(P[i].x) + ", " + round(P[i].y));
+}
 
 function CPR(Px, Py) {
-  console.log("P.length: " + Px.length);
-  logPoints(Px);
-  var minDist = 1000000;
-  var CP = new Array();
+	console.log("Px: ");
+	logPoints(Px);
+
+  // base cases: explicit distance calculation between points
   if (Px.length == 3) {
-    if (distance(Px[0], Px[1]) <= minDist) {
-      CP = [Px[0], Px[1]];
-      minDist = distance(Px[0], Px[1]);
-    }
+	  var closest = [Px[0], Px[1]];
+    var minDist = distance(Px[0], Px[1]);
       
     if (distance(Px[1], Px[2]) <= minDist) {
-      CP = [Px[1], Px[2]];
+      closest = [Px[1], Px[2]];
       minDist = distance(Px[1], Px[2]);
     }
-      
-    if (distance(Px[0], Px[2]) <= minDist) {
-      CP = [Px[0], Px[2]];
+    else if (distance(Px[0], Px[2]) <= minDist) {
+      closest = [Px[0], Px[2]];
       minDist = distance(Px[0], Px[2]);
     }
-    return CP;
+    return closest;
   }
   
   if (Px.length == 2) {
@@ -121,22 +109,21 @@ function CPR(Px, Py) {
   var Ry = sortbyY(R);
   
   console.log("");
-  console.log("");
   
-  var leftCP = CPR(Q, Qx, Qy);  // (q1, q2) closest pair of points in Q
+  var leftCP = CPR(Qx, Qy);  // (q1, q2) closest pair of points in Q
   console.log("Left CP:");
   logPoints(leftCP);
   
   console.log("+");
   
-  var rightCP = CPR(R, Rx, Ry); // (r1, r2) closest pair of points in R
+  var rightCP = CPR(Rx, Ry); // (r1, r2) closest pair of points in R
   console.log("Right CP:");
   logPoints(rightCP);
   
+  // calculate delta
   var delta = min(distance(leftCP[0], leftCP[1]), distance(rightCP[0], rightCP[1]));
   console.log("delta: " + delta);
   var xstar = Q[Q.length-1].x;
-  midLines.push([xstar, delta]);
   
   // create set S of points within distance delta of line x = xstar
   var S = new Array();
@@ -149,7 +136,7 @@ function CPR(Px, Py) {
   console.log("Sy: ");
   logPoints(Sy);
   
-  var sminDist = 10000000;
+  var sminDist = 1000000;
   var s1;
   var s2;
   for (var i = 0; i < Sy.length; i++) {
@@ -172,6 +159,5 @@ function CPR(Px, Py) {
   else
     return rightCP;
   
-  console.log("NOTHING?!");
   return null;
 }
